@@ -1,0 +1,48 @@
+<div style="box-sizing:border-box;max-width:100%;padding:14px;background:var(--hatch-widget-surface);border:1px solid var(--hatch-widget-border);border-radius:12px;color:var(--hatch-widget-text);font-family:system-ui,sans-serif;">
+  <div style="font-weight:700;font-size:16px;margin-bottom:10px;">Calculadora Duplicativas</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+    <label style="flex:1;min-width:90px;font-size:12px;color:var(--hatch-widget-muted);">Monto base ($)
+      <input id="dBase" type="number" value="20" min="1" step="any" style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1px solid var(--hatch-widget-border);background:var(--hatch-widget-bg);color:var(--hatch-widget-text);box-sizing:border-box;">
+    </label>
+    <label style="flex:1;min-width:90px;font-size:12px;color:var(--hatch-widget-muted);">Payout (%)
+      <input id="dPay" type="number" value="86" min="1" max="100" step="any" style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1px solid var(--hatch-widget-border);background:var(--hatch-widget-bg);color:var(--hatch-widget-text);box-sizing:border-box;">
+    </label>
+    <label style="flex:1;min-width:90px;font-size:12px;color:var(--hatch-widget-muted);">Duplicativas
+      <input id="dN" type="number" value="6" min="1" max="20" step="1" style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1px solid var(--hatch-widget-border);background:var(--hatch-widget-bg);color:var(--hatch-widget-text);box-sizing:border-box;">
+    </label>
+  </div>
+  <button id="dGo" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--hatch-widget-accent);color:var(--hatch-widget-on-accent);font-weight:700;font-size:14px;cursor:pointer;">Calcular</button>
+  <div id="dOut" style="margin-top:12px;font-size:13px;"></div>
+  <div style="margin-top:10px;font-size:11px;color:var(--hatch-widget-muted);">Fórmula: monto final = base × (1 + payout)<sup>n</sup> — igual que tu bot.</div>
+</div>
+<script>
+(function(){
+  var HW = window.hatchWidget || {getState:function(d){return d;}, setState:function(){}};
+  var st = HW.getState({base:20, pay:86, n:6});
+  var b=document.getElementById('dBase'), p=document.getElementById('dPay'),
+      n=document.getElementById('dN'), out=document.getElementById('dOut');
+  b.value=st.base; p.value=st.pay; n.value=st.n;
+  function fmt(x){ return '$' + x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function calc(){
+    var base=parseFloat(b.value)||0, pay=(parseFloat(p.value)||0)/100, nn=Math.min(20,Math.max(1,parseInt(n.value)||1));
+    HW.setState({base:base, pay:parseFloat(p.value)||0, n:nn});
+    var stake=base, rows='', i, g, sig;
+    for(i=1;i<=nn;i++){
+      g=stake*pay; sig=stake+g;
+      rows+='<tr><td style="padding:6px 4px;border-top:1px solid var(--hatch-widget-border);">'+i+'</td>'
+        +'<td style="padding:6px 4px;border-top:1px solid var(--hatch-widget-border);">'+fmt(stake)+'</td>'
+        +'<td style="padding:6px 4px;border-top:1px solid var(--hatch-widget-border);">'+fmt(g)+'</td>'
+        +'<td style="padding:6px 4px;border-top:1px solid var(--hatch-widget-border);font-weight:700;">'+fmt(sig)+'</td></tr>';
+      stake=sig;
+    }
+    out.innerHTML='<table style="width:100%;border-collapse:collapse;">'
+      +'<tr style="color:var(--hatch-widget-muted);font-size:11px;"><td>Nivel</td><td>Apuesta</td><td>Ganancia</td><td>Acumulado</td></tr>'
+      +rows+'</table>'
+      +'<div style="margin-top:10px;padding:8px;border-radius:8px;background:var(--hatch-widget-surface-muted);">'
+      +'Si ganas las '+nn+': <b>'+fmt(stake)+'</b><br>'
+      +'<span style="color:var(--hatch-widget-muted);">Si pierdes en cualquier nivel, el neto del ciclo es <b>-'+fmt(base)+'</b> (solo arriesgaste el inicial).</span></div>';
+  }
+  document.getElementById('dGo').addEventListener('click', calc);
+  calc();
+})();
+</script>
